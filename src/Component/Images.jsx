@@ -4,14 +4,17 @@ import { useForm } from 'react-hook-form';
 
 const Images = () => {
 
-    const [allImages, setAllImages] = useState([])
+    const [allImages, setAllImages] = useState([]);
+    const [allchecked, setAllChecked] = useState([]);
 
     //load all gallery images
     useEffect(() => {
         fetch('http://localhost:5000/images')
             .then(res => res.json())
             .then(data => setAllImages(data))
-    }, [allImages])
+    }, [])
+
+    console.log(allchecked)
 
     // useform for getting image file
     const { register, handleSubmit, reset } = useForm();
@@ -53,15 +56,26 @@ const Images = () => {
 
     return (
         <div>
+            {/* selected item number */}
+            <p className='text-xl'>{allchecked.length} item selected</p>
+
+            {/* Delete all button */}
+            <button className="btn btn-warning m-5">All Delete</button>
+
+            {/* Images display section */}
             <div className='grid grid-flow-row grid-cols-3 gap-4  '>
                 {
-                    allImages.map((singleImage, index) => <Image singleImage={singleImage} key={index}></Image>)
+                    allImages.map((singleImage, index) => <Image singleImage={singleImage} setAllChecked={setAllChecked} allchecked={allchecked} key={index}></Image>)
                 }
             </div>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <input type="file" {...register("image", { required: true })} className='input input-bordered' />
-                <input type="submit" className='btn' value="add" />
-            </form>
+
+            {/* Image upload section */}
+            <div>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <input type="file" {...register("image", { required: true })} className='input input-bordered' />
+                    <input type="submit" className='btn' value="add" />
+                </form>
+            </div>
         </div>
     );
 };
