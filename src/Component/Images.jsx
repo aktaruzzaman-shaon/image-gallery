@@ -1,26 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import Image from './Image';
 import { useForm } from 'react-hook-form';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { useQuery } from 'react-query';
 
 const Images = () => {
 
-    const [allImages, setAllImages] = useState([]);
     const [allchecked, setAllChecked] = useState([]);
+    const [allImages, setAllImages] = useState([]);
+
 
     //load all gallery images
-    useEffect(() => {
-        fetch('http://localhost:5000/images')
-            .then(res => res.json())
-            .then(data => setAllImages(data))
-    }, [])
+    const fetchData = async () => {
+        const response = await fetch('http://localhost:5000/images')
+        if (!response.ok) {
+            throw new Error("Network error")
+        }
+        return response.json();
+    }
+    const { data, isLoading } = useQuery("Images", fetchData);
 
-    console.log(allchecked)
+    useEffect(() => {
+        
+        //reloading the page set value at localstorage and get values
+        const arrayIdOrder = JSON.parse(localStorage.getItem('imageOrder'));
+        if (!arrayIdOrder && data?.length) {
+            const idsOrderArray = data.map(task => task._id)
+            localStorage.setItem('imageOrder', JSON.stringify(idsOrderArray))
+        }
+
+        let myArray;
+        if (arrayIdOrder?.length && data?.length) {
+            myArray = arrayIdOrder.map(position => {
+                return data.find(el => el._id === position)
+            })
+
+            const newItems = data.filter(el => {
+                return !arrayIdOrder.includes(el._id)
+            })
+
+            if (newItems?.length) myArray = [...newItems, ...myArray]
+        }
+
+        setAllImages(myArray || data)
+    }, [data])
+
 
     // useform for getting image file
     const { register, handleSubmit, reset } = useForm();
     const imageStorageKey = '1d685d0dc62621d6524a698642b092eb';
 
-    // for uploading image to imgbb server 
+
+    //handleDragEnd function
+    const handleDragEnd = (result) => {
+        if (!result) return
+        const tasks = [...allImages]
+        const [reorderedItem] = tasks.splice(result.source.index, 1)
+        tasks.splice(result.destination.index, 0, reorderedItem)
+
+        const idsOrderArray = tasks.map(task => task._id)
+        localStorage.setItem('imageOrder', JSON.stringify(idsOrderArray))
+
+        setAllImages(tasks)
+    }
+
+
+    // for uploading image to imgbb server
     const onSubmit = async data => {
         const image = data.image[0];
         const formData = new FormData();
@@ -32,6 +77,7 @@ const Images = () => {
         })
             .then(res => res.json())
             .then(result => {
+                console.log(result)
                 if (result.success) {
                     const uploadImageUrl = result.data.url;
                     const imageUrl = { img: uploadImageUrl }
@@ -54,6 +100,11 @@ const Images = () => {
             })
     }
 
+    if (isLoading) {
+        return <p>Loading ...</p>
+    }
+
+
     return (
         <div>
             {/* selected item number */}
@@ -63,11 +114,31 @@ const Images = () => {
             <button className="btn btn-warning m-5">All Delete</button>
 
             {/* Images display section */}
-            <div className='grid grid-flow-row grid-cols-3 gap-4  '>
-                {
-                    allImages.map((singleImage, index) => <Image singleImage={singleImage} setAllChecked={setAllChecked} allchecked={allchecked} key={index}></Image>)
-                }
-            </div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId='images'>
+                    {(provided) => (
+                        <section {...provided.droppableProps} ref={provided.innerRef}>
+                            <div className='grid grid-flow-row grid-cols-3 gap-4 '>
+                                {
+                                    allImages?.map((singleImage, index) => {
+                                        return (
+                                            <Draggable key={singleImage._id} draggableId={singleImage._id} index={index}>
+                                                {(provided) => (
+                                                    <div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                                        <Image singleImage={singleImage} setAllChecked={setAllChecked} allchecked={allchecked} key={index} index={index} ></Image>
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        )
+                                    }
+                                    )
+                                }
+                            </div>
+                            {provided.placeholder}
+                        </section>
+                    )}
+                </Droppable>
+            </DragDropContext>
 
             {/* Image upload section */}
             <div>
@@ -76,7 +147,7 @@ const Images = () => {
                     <input type="submit" className='btn' value="add" />
                 </form>
             </div>
-        </div>
+        </div >
     );
 };
 
