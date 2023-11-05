@@ -6,11 +6,12 @@ import { useQuery } from 'react-query';
 
 const Images = () => {
 
+    // Local state -----------------------------------------------
     const [allchecked, setAllChecked] = useState([]);
     const [allImages, setAllImages] = useState([]);
 
 
-    //load all gallery images
+    //load all gallery images -------------------------------------
     const fetchData = async () => {
         const response = await fetch('http://localhost:5000/images')
         if (!response.ok) {
@@ -18,11 +19,13 @@ const Images = () => {
         }
         return response.json();
     }
-    const { data, isLoading } = useQuery("Images", fetchData);
+
+    //used react use query library -------------------------------
+    const { data, isLoading, refetch } = useQuery("Images", fetchData);
+
 
     useEffect(() => {
-
-        //reloading the page set value at localstorage and get values
+        //reloading the page set value at localstorage and get values -------
         const arrayIdOrder = JSON.parse(localStorage.getItem('imageOrder'));
         if (!arrayIdOrder && data?.length) {
             const idsOrderArray = data.map(task => task._id)
@@ -46,14 +49,14 @@ const Images = () => {
     }, [data])
 
 
-    // useform for getting image file
+    // useform for getting image file ---------------------------
     const { register, handleSubmit, reset } = useForm();
     const imageStorageKey = '1d685d0dc62621d6524a698642b092eb';
 
 
-    //handleDragEnd function
+    //handleDragEnd function -------------------------------------
     const handleDragEnd = (result) => {
-        if (!result) return
+        if (!result?.destination) return
         const tasks = [...allImages]
         const [reorderedItem] = tasks.splice(result.source.index, 1)
         tasks.splice(result.destination.index, 0, reorderedItem)
@@ -65,7 +68,7 @@ const Images = () => {
     }
 
 
-    // for uploading image to imgbb server
+    // for uploading image to imgbb server -----------------------
     const onSubmit = async data => {
         const image = data.image[0];
         const formData = new FormData();
@@ -82,12 +85,12 @@ const Images = () => {
                     const uploadImageUrl = result.data.url;
                     const imageUrl = { img: uploadImageUrl }
 
-                    // after successfully upload in imgbb server pass the imagurl to monogdb server
+                    // after successfully upload in imgbb server 
+                    // pass the imagurl to monogdb server
                     fetch('http://localhost:5000/addImageUrl', {
                         method: 'POST',
                         headers: {
                             "content-type": "application/json",
-                            authorization: 'bearer'
                         },
                         body: JSON.stringify(imageUrl)
                     })
@@ -95,11 +98,43 @@ const Images = () => {
                         .then(inserted => {
                             console.log('inserted')
                             reset()
+                            refetch()
                         })
                 }
             })
     }
 
+    //for deleting all image from server---------------------------------------------
+    const handleDelete = () => {
+
+        // localstorage part ---------------------------
+        const arrayIdsOrder = JSON.parse(localStorage.getItem("imageOrder"));
+        if (arrayIdsOrder?.length) {
+            const newIdsOrderArray = arrayIdsOrder.filter(num => !allchecked.includes(num))
+            localStorage.setItem('imageOrder', JSON.stringify(newIdsOrderArray))
+        }
+
+        // delete from serverr --------------------------
+        fetch('http://localhost:5000/deleteImages', {
+            method: 'DELETE',
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(allchecked)
+        })
+            .then((response) => {
+                if (response.ok) {
+                    console.log("Successfully deleteted")
+                    refetch()
+                }
+                else {
+                    console.error(response.status)
+                }
+            })
+
+    }
+
+    // Loading showing ---------------------------------
     if (isLoading) {
         return <p>Loading ...</p>
     }
@@ -111,7 +146,7 @@ const Images = () => {
             <p className='text-xl'>{allchecked.length} item selected</p>
 
             {/* Delete all button */}
-            <button className="btn btn-warning m-5">All Delete</button>
+            <button className="btn btn-warning m-5" onClick={handleDelete}>All Delete</button>
 
             {/* Images display section */}
             <DragDropContext onDragEnd={handleDragEnd}>
