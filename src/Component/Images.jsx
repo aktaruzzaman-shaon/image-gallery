@@ -21,7 +21,7 @@ const Images = () => {
     const { data, isLoading } = useQuery("Images", fetchData);
 
     useEffect(() => {
-        
+
         //reloading the page set value at localstorage and get values
         const arrayIdOrder = JSON.parse(localStorage.getItem('imageOrder'));
         if (!arrayIdOrder && data?.length) {
