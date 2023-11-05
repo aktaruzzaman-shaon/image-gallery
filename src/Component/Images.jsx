@@ -134,7 +134,7 @@ const Images = () => {
 
     }
 
-    // Loading showing ---------------------------------
+    // Loading showing --------------------
     if (isLoading) {
         return <p>Loading ...</p>
     }
@@ -142,45 +142,49 @@ const Images = () => {
 
     return (
         <div>
-            {/* selected item number */}
-            <p className='text-xl'>{allchecked.length} item selected</p>
+            <div className='flex justify-between'>
+                {/* selected item number */}
+                <p className='text-xl pt-5 pl-5'>{allchecked.length} item selected</p>
 
-            {/* Delete all button */}
-            <button className="btn btn-warning m-5" onClick={handleDelete}>All Delete</button>
+                {/* Delete all button */}
+                <button className="btn btn-warning m-5 order-last" onClick={handleDelete}>All Delete</button>
 
-            {/* Images display section */}
-            <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId='images'>
-                    {(provided) => (
-                        <section {...provided.droppableProps} ref={provided.innerRef}>
-                            <div className='grid grid-flow-row grid-cols-3 gap-4 '>
-                                {
-                                    allImages?.map((singleImage, index) => {
-                                        return (
-                                            <Draggable key={singleImage._id} draggableId={singleImage._id} index={index}>
-                                                {(provided) => (
-                                                    <div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-                                                        <Image singleImage={singleImage} setAllChecked={setAllChecked} allchecked={allchecked} key={index} index={index} ></Image>
-                                                    </div>
-                                                )}
-                                            </Draggable>
+            </div>
+            <div >
+                {/* Images display section */}
+                <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId='images'>
+                        {(provided) => (
+                            <section {...provided.droppableProps} ref={provided.innerRef}>
+                                <div className='grid grid-flow-row grid-cols-3 md:grid-cols-4 gap-4'>
+                                    {
+                                        allImages?.map((singleImage, index) => {
+                                            return (
+                                                <Draggable key={singleImage._id} draggableId={singleImage._id} index={index}>
+                                                    {(provided) => (
+                                                        <div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                                            <Image singleImage={singleImage} setAllChecked={setAllChecked} allchecked={allchecked} key={index} index={index} ></Image>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            )
+                                        }
                                         )
                                     }
-                                    )
-                                }
-                            </div>
-                            {provided.placeholder}
-                        </section>
-                    )}
-                </Droppable>
-            </DragDropContext>
+                                </div>
+                                {provided.placeholder}
+                            </section>
+                        )}
+                    </Droppable>
+                </DragDropContext>
 
-            {/* Image upload section */}
-            <div>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <input type="file" {...register("image", { required: true })} className='input input-bordered' />
-                    <input type="submit" className='btn' value="add" />
-                </form>
+                {/* Image upload section */}
+                <div className='mt-5'>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <input type="file" {...register("image", { required: true })} className='input input-bordered ' />
+                        <input type="submit" className='btn' value="add" />
+                    </form>
+                </div>
             </div>
         </div >
     );
