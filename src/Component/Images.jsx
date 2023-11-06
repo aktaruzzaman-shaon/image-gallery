@@ -13,7 +13,7 @@ const Images = () => {
 
     //load all gallery images -------------------------------------
     const fetchData = async () => {
-        const response = await fetch('http://localhost:5000/images')
+        const response = await fetch('https://image-gallery-server-ten.vercel.app/allImage')
         if (!response.ok) {
             throw new Error("Network error")
         }
@@ -87,7 +87,7 @@ const Images = () => {
 
                     // after successfully upload in imgbb server 
                     // pass the imagurl to monogdb server
-                    fetch('http://localhost:5000/addImageUrl', {
+                    fetch('https://image-gallery-server-ten.vercel.app/addImageUrl', {
                         method: 'POST',
                         headers: {
                             "content-type": "application/json",
@@ -115,7 +115,7 @@ const Images = () => {
         }
 
         // delete from serverr --------------------------
-        fetch('http://localhost:5000/deleteImages', {
+        fetch('https://image-gallery-server-ten.vercel.app/deleteImages', {
             method: 'DELETE',
             headers: {
                 "content-type": "application/json",
@@ -139,7 +139,7 @@ const Images = () => {
         return <p>Loading ...</p>
     }
 
-
+    console.log(allImages)
     return (
         <div>
             <div className='flex justify-between'>
